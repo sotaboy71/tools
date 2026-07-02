@@ -28,6 +28,46 @@ works, and to practice on legal training sites like HackTheBox.
 - **attacks** — a study guide: the 12 common attack types and how to spot/stop them.
 - **guide** / **serve** — a walkthrough, and the point-and-click app version.
 
+## What you need to run it (requirements)
+
+**To build and run pentoolkit itself, you need exactly two things:**
+
+1. **Go** — version 1.11 or newer. This is the compiler that turns the source
+   into the runnable program. Download: <https://go.dev/dl/>
+2. **A terminal** — already built into every computer (Terminal on macOS,
+   PowerShell/Command Prompt on Windows, any terminal on Linux, Termux on
+   Android).
+
+That's the whole list. pentoolkit uses **only Go's standard library**, so there
+is nothing else to install — no `pip`, no `npm`, no extra packages.
+
+**Install Go** with your system's package manager:
+
+```sh
+sudo apt install golang      # Debian / Ubuntu Linux
+brew install go              # macOS (Homebrew)
+winget install GoLang.Go     # Windows (or download from go.dev/dl)
+pkg install golang           # Android (Termux)
+```
+
+**Then build it:**
+
+```sh
+go build -o pentoolkit ./cmd/pentoolkit
+```
+
+**Runs on:** Linux, macOS, Windows, and Android (via Termux) — it's a single
+self-contained binary.
+
+### Optional extras (only for the practice/learning parts — NOT needed to run pentoolkit)
+
+| Tool | What it's for | Install |
+|------|---------------|---------|
+| **git** | Download this source code (or just grab a ZIP instead) | `apt/brew/pkg install git` |
+| **Docker** | Run local practice websites (Juice Shop, DVWA) to test against | <https://docs.docker.com/get-docker/> |
+| **Python 3** | The `python3 -m http.server` trick to spin up a quick test site | Usually preinstalled; else `apt/brew/pkg install python3` |
+| **jq** | Prettify/filter the `-json` output | `apt/brew/pkg install jq` |
+
 ## Quick start (easiest path)
 
 ```sh
