@@ -29,6 +29,11 @@ pentoolkit I need help
 pentoolkit guide
 ```
 
+**Want to actually learn the tools?** [LEARNING.md](LEARNING.md) is a hands-on
+lab guide: how to practice every tool on safe, legal targets (your own machine,
+local vulnerable apps, Nmap's practice host) and how to move on to
+HackTheBox/TryHackMe.
+
 ## App / web UI (works on your phone)
 
 Prefer buttons over a terminal? Launch the built-in web app:
