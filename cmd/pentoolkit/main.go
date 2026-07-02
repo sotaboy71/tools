@@ -1,0 +1,89 @@
+// Command pentoolkit is a small, self-contained toolkit of reconnaissance
+// utilities for authorized penetration testing and security education.
+//
+// It bundles several read-only, non-destructive commands that are commonly
+// used during the information-gathering phase of an authorized engagement:
+//
+//	portscan   TCP connect scan of a host over a range/list of ports
+//	banner     Grab the service banner exposed on a single TCP port
+//	httpheaders Fetch a URL and report on security-relevant HTTP headers
+//	dns        Resolve A/AAAA/MX/NS/TXT/CNAME records for a domain
+//	tlsinfo    Inspect the TLS certificate chain presented by a host
+//
+// IMPORTANT: Only run these tools against systems you own or have explicit,
+// written permission to test. Unauthorized scanning may be illegal.
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"time"
+)
+
+// command describes a single subcommand of the toolkit.
+type command struct {
+	name    string
+	summary string
+	run     func(ctx context.Context, args []string) error
+}
+
+var commands = []command{
+	{"portscan", "TCP connect scan of a host across a set of ports", runPortscan},
+	{"banner", "Grab the service banner from a single TCP port", runBanner},
+	{"httpheaders", "Report on security-relevant HTTP response headers", runHTTPHeaders},
+	{"dns", "Resolve DNS records (A, AAAA, MX, NS, TXT, CNAME)", runDNS},
+	{"tlsinfo", "Inspect the TLS certificate presented by a host", runTLSInfo},
+}
+
+func main() {
+	if len(os.Args) < 2 {
+		usage()
+		os.Exit(2)
+	}
+
+	name := os.Args[1]
+	switch name {
+	case "-h", "--help", "help":
+		usage()
+		return
+	}
+
+	for _, c := range commands {
+		if c.name == name {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			// Give every command a generous default deadline so a hung
+			// target cannot wedge the process indefinitely.
+			ctx, cancel2 := context.WithTimeout(ctx, 10*time.Minute)
+			defer cancel2()
+			if err := c.run(ctx, os.Args[2:]); err != nil {
+				fmt.Fprintf(os.Stderr, "pentoolkit %s: %v\n", name, err)
+				os.Exit(1)
+			}
+			return
+		}
+	}
+
+	fmt.Fprintf(os.Stderr, "pentoolkit: unknown command %q\n\n", name)
+	usage()
+	os.Exit(2)
+}
+
+func usage() {
+	fmt.Fprintf(os.Stderr, `pentoolkit is a recon toolkit for authorized penetration testing.
+
+Usage:
+	pentoolkit <command> [flags]
+
+Commands:
+`)
+	for _, c := range commands {
+		fmt.Fprintf(os.Stderr, "\t%-12s %s\n", c.name, c.summary)
+	}
+	fmt.Fprintf(os.Stderr, `
+Run "pentoolkit <command> -h" for details on a command.
+
+Only use these tools against systems you are authorized to test.
+`)
+}
