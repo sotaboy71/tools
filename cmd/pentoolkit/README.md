@@ -32,7 +32,8 @@ pentoolkit guide
 **Want to actually learn the tools?** [LEARNING.md](LEARNING.md) is a hands-on
 lab guide: how to practice every tool on safe, legal targets (your own machine,
 local vulnerable apps, Nmap's practice host) and how to move on to
-HackTheBox/TryHackMe.
+HackTheBox/TryHackMe. For a one-page command reference and a glossary of terms,
+see [CHEATSHEET.md](CHEATSHEET.md).
 
 ## App / web UI (works on your phone)
 
