@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -38,6 +39,7 @@ var commands = []command{
 	{"tlsinfo", "Inspect the TLS certificate presented by a host", runTLSInfo},
 	{"subenum", "Discover live subdomains of a domain via DNS", runSubenum},
 	{"httpprobe", "Probe common paths on a URL for content discovery", runHTTPProbe},
+	{"guide", "Print a step-by-step walkthrough of a recon workflow", runGuide},
 }
 
 func main() {
@@ -50,6 +52,13 @@ func main() {
 	switch name {
 	case "-h", "--help", "help":
 		usage()
+		return
+	}
+
+	// Friendly natural-language entry point: `pentoolkit I need help`
+	// (in any capitalization) prints the step-by-step guide.
+	if strings.EqualFold(strings.Join(os.Args[1:], " "), "i need help") {
+		runGuide(context.Background(), nil)
 		return
 	}
 
@@ -87,6 +96,7 @@ Commands:
 	}
 	fmt.Fprintf(os.Stderr, `
 Run "pentoolkit <command> -h" for details on a command.
+New here? Run "pentoolkit I need help" for a step-by-step walkthrough.
 
 Only use these tools against systems you are authorized to test.
 `)

@@ -19,6 +19,16 @@ go build -o pentoolkit ./cmd/pentoolkit
 go install golang.org/x/tools/cmd/pentoolkit@latest
 ```
 
+## New here?
+
+Get a step-by-step walkthrough of a full recon workflow:
+
+```
+pentoolkit I need help
+# or
+pentoolkit guide
+```
+
 ## Commands
 
 | Command       | Purpose                                                        |
@@ -30,6 +40,7 @@ go install golang.org/x/tools/cmd/pentoolkit@latest
 | `tlsinfo`     | Inspect the TLS version, cipher, and certificate chain of a host |
 | `subenum`     | Discover live subdomains of a domain via DNS resolution        |
 | `httpprobe`   | Probe a URL for common/interesting paths (content discovery)   |
+| `guide`       | Print a step-by-step walkthrough of a recon workflow           |
 
 Run `pentoolkit <command> -h` for the flags of any command. Every command
 accepts `-json` to emit machine-readable output for piping into other tools
