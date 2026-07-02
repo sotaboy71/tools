@@ -130,22 +130,22 @@ const indexHTML = `<!DOCTYPE html>
 <script>
 // Each tool's form fields. flag = CLI flag, def = default value.
 const TOOLS = {
-  dns:        { desc:"Resolve A/AAAA/MX/NS/TXT/CNAME records for a domain.",
+  dns:        { desc:"Look up a domain's addresses and mail/name servers.",
     fields:[{flag:"-domain", label:"Domain", ph:"example.com", req:true}] },
-  subenum:    { desc:"Discover live subdomains via DNS resolution.",
+  subenum:    { desc:"Find extra sites hidden under a domain (mail., dev., ...).",
     fields:[{flag:"-domain", label:"Domain", ph:"example.com", req:true}] },
-  portscan:   { desc:"TCP connect scan across a set of ports.",
+  portscan:   { desc:"See which ports (doors) are open on a machine.",
     fields:[{flag:"-host", label:"Host", ph:"example.com or 10.0.0.5", req:true},
             {flag:"-ports", label:"Ports", def:"1-1024", ph:"22,80,443 or 1-1024"}] },
-  banner:     { desc:"Grab the service banner from a single TCP port.",
+  banner:     { desc:"Ask an open port what program and version is behind it.",
     fields:[{flag:"-host", label:"Host", ph:"example.com", req:true},
             {flag:"-port", label:"Port", type:"number", ph:"22", req:true}] },
-  tlsinfo:    { desc:"Inspect the TLS version, cipher, and certificate chain.",
+  tlsinfo:    { desc:"Check a site's HTTPS certificate and encryption.",
     fields:[{flag:"-host", label:"Host", ph:"example.com", req:true},
             {flag:"-port", label:"Port", type:"number", def:"443"}] },
-  httpheaders:{ desc:"Report on security-relevant HTTP response headers.",
+  httpheaders:{ desc:"Check whether a website's security settings are turned on.",
     fields:[{flag:"-url", label:"URL", ph:"https://example.com", req:true}] },
-  httpprobe:  { desc:"Probe common paths for content discovery.",
+  httpprobe:  { desc:"Look for common hidden pages on a site (like /admin).",
     fields:[{flag:"-url", label:"URL", ph:"https://example.com", req:true}] },
 };
 

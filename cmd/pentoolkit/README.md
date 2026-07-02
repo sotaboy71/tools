@@ -1,15 +1,50 @@
 # pentoolkit
 
-A small, self-contained toolkit of **reconnaissance** utilities for authorized
-penetration testing and security education. It is written in pure Go (standard
-library only) and adds no dependencies to the module.
+## What is this? (in plain English)
 
-> ⚠️ **Authorized use only.** Every command here talks to remote systems. Only
-> run them against hosts you own or have **explicit, written permission** to
-> test. Unauthorized scanning may be illegal in your jurisdiction.
+pentoolkit is a set of small tools for **looking at** computers and websites to
+understand how they're set up — which "doors" (ports) are open, what software is
+running, whether a site's security settings are in place, and so on. Think of it
+as a flashlight and a checklist, **not** a crowbar: it looks and reports, it
+never breaks in or damages anything.
 
-All commands are **read-only and non-destructive** — they fingerprint and
-report, they do not attempt to exploit anything.
+People use tools like these to check their own systems, to learn how security
+works, and to practice on legal training sites like HackTheBox.
+
+> ⚠️ **Only use it on things you're allowed to.** These tools reach out to real
+> computers over the network. Only point them at machines you own or have clear,
+> written permission to test (or purpose-built practice sites). Scanning
+> other people's systems without permission can be illegal.
+
+### What each tool does, in one line
+
+- **dns** — look up a website's address and mail/name-server info.
+- **subenum** — find extra sites hidden under a domain (like `mail.` or `dev.`).
+- **portscan** — check which "doors" (ports) on a machine are open.
+- **banner** — ask an open door what program is behind it (and its version).
+- **tlsinfo** — check a site's HTTPS certificate (is it valid? expiring? modern?).
+- **httpheaders** — check whether a website has good security settings turned on.
+- **httpprobe** — look for common hidden pages on a site (like `/admin`).
+- **attacks** — a study guide: the 12 common attack types and how to spot/stop them.
+- **guide** / **serve** — a walkthrough, and the point-and-click app version.
+
+## Quick start (easiest path)
+
+```sh
+# 1. build it once (needs Go installed)
+go build -o pentoolkit ./cmd/pentoolkit
+
+# 2. open the point-and-click app
+./pentoolkit serve
+#    then open http://127.0.0.1:8787 in your browser
+
+# or, if you like the command line, start with the guided walkthrough:
+./pentoolkit I need help
+```
+
+New to the terms (port, DNS, TLS…)? See the plain-English glossary in
+[CHEATSHEET.md](CHEATSHEET.md), and the step-by-step tutorial in
+[LEARNING.md](LEARNING.md).
 
 ## Install
 
@@ -18,6 +53,10 @@ go build -o pentoolkit ./cmd/pentoolkit
 # or
 go install golang.org/x/tools/cmd/pentoolkit@latest
 ```
+
+All commands are **read-only and non-destructive** — they look and report, they
+do not attempt to break into or exploit anything. Written in pure Go (standard
+library only), so there's nothing extra to install.
 
 ## New here?
 
@@ -65,22 +104,21 @@ full-screen app, there's also a WebView wrapper in
 
 ## Commands
 
-| Command       | Purpose                                                        |
-|---------------|----------------------------------------------------------------|
-| `portscan`    | Concurrent TCP connect scan across a range/list of ports       |
-| `banner`      | Grab the service banner exposed on a single TCP port           |
-| `httpheaders` | Fetch a URL and report on security-relevant HTTP headers       |
-| `dns`         | Resolve A/AAAA/MX/NS/TXT/CNAME records for a domain             |
-| `tlsinfo`     | Inspect the TLS version, cipher, and certificate chain of a host |
-| `subenum`     | Discover live subdomains of a domain via DNS resolution        |
-| `httpprobe`   | Probe a URL for common/interesting paths (content discovery)   |
-| `guide`       | Print a step-by-step walkthrough of a recon workflow           |
-| `attacks`     | Defender reference: detect & defend the 12 common attack types |
-| `serve`       | Launch the mobile-friendly web UI for all tools                |
+| Command       | In plain English                                               | Technical name |
+|---------------|----------------------------------------------------------------|----------------|
+| `dns`         | Look up a domain's addresses and mail/name servers             | DNS record lookup |
+| `subenum`     | Find extra sites under a domain (`mail.`, `dev.`, …)           | subdomain enumeration |
+| `portscan`    | See which ports (doors) are open on a machine                  | TCP connect scan |
+| `banner`      | Ask an open port what program/version is behind it             | banner grab |
+| `tlsinfo`     | Check a site's HTTPS certificate and encryption                | TLS/cert inspection |
+| `httpheaders` | Check whether a website's security settings are turned on      | HTTP security-header audit |
+| `httpprobe`   | Look for common hidden pages (`/admin`, `/.env`, …)            | content discovery |
+| `attacks`     | Study guide: 12 common attacks and how to spot/stop them       | defender reference |
+| `guide`       | A step-by-step walkthrough of how to use everything            | workflow help |
+| `serve`       | The point-and-click app version (opens in your browser)        | web UI |
 
-Run `pentoolkit <command> -h` for the flags of any command. Every command
-accepts `-json` to emit machine-readable output for piping into other tools
-(e.g. `jq`).
+Run `pentoolkit <command> -h` to see the options for any command. Add `-json` to
+any command to get the results as data (handy for feeding into other tools).
 
 ## Examples
 
