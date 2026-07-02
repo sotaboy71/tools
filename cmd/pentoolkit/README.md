@@ -53,7 +53,9 @@ The server binds to `127.0.0.1` (this machine only) by default, and never runs
 a shell — each tool is executed as a separate, argument-safe subprocess.
 
 **On Android?** You can build and run this whole thing on your phone with
-Termux — no PC needed. See [TERMUX.md](TERMUX.md).
+Termux — no PC needed. See [TERMUX.md](TERMUX.md). For a real launcher icon /
+full-screen app, there's also a WebView wrapper in
+[android/](android/) that displays this same UI.
 
 ## Commands
 
