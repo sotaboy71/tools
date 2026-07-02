@@ -41,6 +41,7 @@ var commands = []command{
 	{"httpprobe", "Probe common paths on a URL for content discovery", runHTTPProbe},
 	{"guide", "Print a step-by-step walkthrough of a recon workflow", runGuide},
 	{"attacks", "Defender reference: detect & defend the 12 common attacks", runAttacks},
+	{"toolbox", "Directory of well-known tools (Nmap, Metasploit, ...) & where to get them", runToolbox},
 	{"serve", "Launch the mobile-friendly web UI for all tools", runServe},
 }
 

@@ -167,6 +167,7 @@ full-screen app, there's also a WebView wrapper in
 | `httpheaders` | Check whether a website's security settings are turned on      | HTTP security-header audit |
 | `httpprobe`   | Look for common hidden pages (`/admin`, `/.env`, …)            | content discovery |
 | `attacks`     | Study guide: 12 common attacks and how to spot/stop them       | defender reference |
+| `toolbox`     | Directory of the big-name tools (Nmap, Metasploit, …) + links  | tool reference |
 | `guide`       | A step-by-step walkthrough of how to use everything            | workflow help |
 | `serve`       | The point-and-click app version (opens in your browser)        | web UI |
 
@@ -212,6 +213,30 @@ pentoolkit dns -domain example.com -json | jq '.a'
 pentoolkit attacks                 # list them
 pentoolkit attacks -name phishing  # detail: what it is, detect, defend
 ```
+
+## The bigger toolkit (`toolbox`)
+
+pentoolkit is a small, safe **learner's** toolkit. The professionals use a wider
+set of programs — and `pentoolkit toolbox` is a built-in directory of them:
+
+```sh
+pentoolkit toolbox                 # list everything, grouped by category
+pentoolkit toolbox -category web   # just one category
+pentoolkit toolbox -json           # as data
+```
+
+It covers the big names you've probably heard of — **Nmap** (scanning),
+**Metasploit** (exploitation), **Burp Suite** / **OWASP ZAP** (web),
+**aircrack-ng** (Wi-Fi), **Wireshark** (traffic), **hashcat** / **John the
+Ripper** / **Hydra** (passwords), and more — plus the all-in-one **Kali Linux**
+distro that bundles most of them, and legal practice sites (HackTheBox,
+TryHackMe, VulnHub).
+
+**Important:** pentoolkit does **not** ship these — they're separate projects.
+The directory tells you what each is, links to its official source, and (where
+relevant) which pentoolkit command is a lightweight version of it. The easiest
+way to get them all at once is to install Kali Linux. As always, use every one
+of them only on systems you own or are authorized to test.
 
 ## Threat reference (defender view)
 
