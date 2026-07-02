@@ -222,8 +222,16 @@ set of programs — and `pentoolkit toolbox` is a built-in directory of them:
 ```sh
 pentoolkit toolbox                 # list everything, grouped by category
 pentoolkit toolbox -category web   # just one category
+pentoolkit toolbox -check          # which of them are installed on THIS machine
 pentoolkit toolbox -json           # as data
 ```
+
+`pentoolkit toolbox -check` looks on your system's `PATH` and reports which of
+these tools you already have (with the path) and which are missing (with the
+link to install). That's how pentoolkit "knows about" the bigger toolkit —
+it can't contain Kali's hundreds of programs (that's a whole operating system,
+not one binary), but it can tell you what's installed and point you at the
+rest.
 
 It covers the big names you've probably heard of — **Nmap** (scanning),
 **Metasploit** (exploitation), **Burp Suite** / **OWASP ZAP** (web),
