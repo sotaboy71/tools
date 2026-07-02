@@ -29,6 +29,29 @@ pentoolkit I need help
 pentoolkit guide
 ```
 
+## App / web UI (works on your phone)
+
+Prefer buttons over a terminal? Launch the built-in web app:
+
+```
+pentoolkit serve
+```
+
+Then open <http://127.0.0.1:8787> in a browser. It's a mobile-friendly page
+with a tool picker, a form for each tool, a JSON-output toggle, and a Help tab
+containing these instructions.
+
+To use it from your **phone** on the same Wi-Fi, bind to all interfaces and
+browse to your computer's LAN IP:
+
+```
+pentoolkit serve -addr 0.0.0.0:8787
+# then on your phone: http://<your-computer-ip>:8787
+```
+
+The server binds to `127.0.0.1` (this machine only) by default, and never runs
+a shell — each tool is executed as a separate, argument-safe subprocess.
+
 ## Commands
 
 | Command       | Purpose                                                        |
@@ -41,6 +64,7 @@ pentoolkit guide
 | `subenum`     | Discover live subdomains of a domain via DNS resolution        |
 | `httpprobe`   | Probe a URL for common/interesting paths (content discovery)   |
 | `guide`       | Print a step-by-step walkthrough of a recon workflow           |
+| `serve`       | Launch the mobile-friendly web UI for all tools                |
 
 Run `pentoolkit <command> -h` for the flags of any command. Every command
 accepts `-json` to emit machine-readable output for piping into other tools
