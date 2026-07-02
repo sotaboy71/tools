@@ -24,6 +24,7 @@ func runPortscan(ctx context.Context, args []string) error {
 	workers := fs.Int("workers", 100, "number of concurrent connection attempts")
 	timeout := fs.Duration("timeout", 2*time.Second, "per-port connection timeout")
 	openOnly := fs.Bool("open-only", true, "only report open ports")
+	jsonOut := fs.Bool("json", false, "emit results as JSON")
 	fs.Usage = func() {
 		fmt.Fprintf(fs.Output(), "Usage: pentoolkit portscan -host HOST [-ports SPEC] [flags]\n\n")
 		fmt.Fprintf(fs.Output(), "TCP connect scan of a host. Example:\n  pentoolkit portscan -host scanme.example -ports 1-1024\n\nFlags:\n")
@@ -45,8 +46,10 @@ func runPortscan(ctx context.Context, args []string) error {
 		return err
 	}
 
-	fmt.Printf("Scanning %s across %d port(s) with %d workers (timeout %s)...\n",
-		*host, len(ports), *workers, *timeout)
+	if !*jsonOut {
+		fmt.Printf("Scanning %s across %d port(s) with %d workers (timeout %s)...\n",
+			*host, len(ports), *workers, *timeout)
+	}
 
 	type result struct {
 		port int
@@ -94,20 +97,35 @@ func runPortscan(ctx context.Context, args []string) error {
 	for r := range resultsCh {
 		if r.open {
 			open = append(open, r.port)
-		} else if !*openOnly {
+		} else if !*openOnly && !*jsonOut {
 			fmt.Printf("  %5d/tcp closed\n", r.port)
 		}
 	}
 	sort.Ints(open)
 
-	fmt.Printf("\n%d open port(s):\n", len(open))
+	type openPort struct {
+		Port    int    `json:"port"`
+		Service string `json:"service,omitempty"`
+	}
+	out := struct {
+		Host  string     `json:"host"`
+		Ports []openPort `json:"open_ports"`
+	}{Host: *host}
 	for _, p := range open {
-		svc := commonService(p)
-		if svc != "" {
-			fmt.Printf("  %5d/tcp open   %s\n", p, svc)
-		} else {
-			fmt.Printf("  %5d/tcp open\n", p)
+		out.Ports = append(out.Ports, openPort{Port: p, Service: commonService(p)})
+	}
+
+	if err := emit(*jsonOut, out, func() {
+		fmt.Printf("\n%d open port(s):\n", len(open))
+		for _, p := range open {
+			if svc := commonService(p); svc != "" {
+				fmt.Printf("  %5d/tcp open   %s\n", p, svc)
+			} else {
+				fmt.Printf("  %5d/tcp open\n", p)
+			}
 		}
+	}); err != nil {
+		return err
 	}
 	return ctx.Err()
 }

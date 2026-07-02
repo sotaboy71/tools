@@ -4,11 +4,13 @@
 // It bundles several read-only, non-destructive commands that are commonly
 // used during the information-gathering phase of an authorized engagement:
 //
-//	portscan   TCP connect scan of a host over a range/list of ports
-//	banner     Grab the service banner exposed on a single TCP port
+//	portscan    TCP connect scan of a host over a range/list of ports
+//	banner      Grab the service banner exposed on a single TCP port
 //	httpheaders Fetch a URL and report on security-relevant HTTP headers
-//	dns        Resolve A/AAAA/MX/NS/TXT/CNAME records for a domain
-//	tlsinfo    Inspect the TLS certificate chain presented by a host
+//	dns         Resolve A/AAAA/MX/NS/TXT/CNAME records for a domain
+//	tlsinfo     Inspect the TLS certificate chain presented by a host
+//	subenum     Discover live subdomains of a domain via DNS
+//	httpprobe   Probe common paths on a URL for content discovery
 //
 // IMPORTANT: Only run these tools against systems you own or have explicit,
 // written permission to test. Unauthorized scanning may be illegal.
@@ -34,6 +36,8 @@ var commands = []command{
 	{"httpheaders", "Report on security-relevant HTTP response headers", runHTTPHeaders},
 	{"dns", "Resolve DNS records (A, AAAA, MX, NS, TXT, CNAME)", runDNS},
 	{"tlsinfo", "Inspect the TLS certificate presented by a host", runTLSInfo},
+	{"subenum", "Discover live subdomains of a domain via DNS", runSubenum},
+	{"httpprobe", "Probe common paths on a URL for content discovery", runHTTPProbe},
 }
 
 func main() {

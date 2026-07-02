@@ -38,6 +38,7 @@ func runHTTPHeaders(ctx context.Context, args []string) error {
 	follow := fs.Bool("follow", true, "follow redirects")
 	insecure := fs.Bool("insecure", false, "skip TLS certificate verification")
 	all := fs.Bool("all", false, "print all response headers, not just security-relevant ones")
+	jsonOut := fs.Bool("json", false, "emit results as JSON")
 	fs.Usage = func() {
 		fmt.Fprintf(fs.Output(), "Usage: pentoolkit httpheaders -url URL [flags]\n\n")
 		fmt.Fprintf(fs.Output(), "Inspect HTTP security headers. Example:\n  pentoolkit httpheaders -url https://example.com\n\nFlags:\n")
@@ -76,42 +77,71 @@ func runHTTPHeaders(ctx context.Context, args []string) error {
 	}
 	defer resp.Body.Close()
 
-	fmt.Printf("%s %s -> %s\n\n", req.Method, *url, resp.Status)
-
-	if *all {
-		fmt.Println("All response headers:")
-		names := make([]string, 0, len(resp.Header))
-		for k := range resp.Header {
-			names = append(names, k)
-		}
-		sort.Strings(names)
-		for _, k := range names {
-			for _, v := range resp.Header[k] {
-				fmt.Printf("  %s: %s\n", k, v)
-			}
-		}
-		fmt.Println()
+	out := headerReport{
+		URL:      *url,
+		Status:   resp.StatusCode,
+		Present:  map[string]string{},
+		Missing:  []string{},
+		Disclose: map[string]string{},
 	}
-
-	fmt.Println("Security headers:")
 	for _, h := range securityHeaders {
 		if v := resp.Header.Get(h.name); v != "" {
-			fmt.Printf("  [+] %-28s %s\n", h.name+":", v)
+			out.Present[h.name] = v
 		} else {
-			fmt.Printf("  [-] %-28s %s\n", h.name+":", h.missing)
+			out.Missing = append(out.Missing, h.name)
+		}
+	}
+	for _, name := range []string{"Server", "X-Powered-By", "X-AspNet-Version", "X-AspNetMvc-Version", "Via"} {
+		if v := resp.Header.Get(name); v != "" {
+			out.Disclose[name] = v
 		}
 	}
 
-	fmt.Println("\nInformation disclosure:")
-	disclosed := false
-	for _, name := range []string{"Server", "X-Powered-By", "X-AspNet-Version", "X-AspNetMvc-Version", "Via"} {
-		if v := resp.Header.Get(name); v != "" {
-			fmt.Printf("  [!] %-28s %s\n", name+":", v)
-			disclosed = true
+	return emit(*jsonOut, out, func() {
+		fmt.Printf("%s %s -> %s\n\n", req.Method, *url, resp.Status)
+
+		if *all {
+			fmt.Println("All response headers:")
+			names := make([]string, 0, len(resp.Header))
+			for k := range resp.Header {
+				names = append(names, k)
+			}
+			sort.Strings(names)
+			for _, k := range names {
+				for _, v := range resp.Header[k] {
+					fmt.Printf("  %s: %s\n", k, v)
+				}
+			}
+			fmt.Println()
 		}
-	}
-	if !disclosed {
-		fmt.Println("  none of the common version-disclosing headers are set")
-	}
-	return nil
+
+		fmt.Println("Security headers:")
+		for _, h := range securityHeaders {
+			if v, ok := out.Present[h.name]; ok {
+				fmt.Printf("  [+] %-28s %s\n", h.name+":", v)
+			} else {
+				fmt.Printf("  [-] %-28s %s\n", h.name+":", h.missing)
+			}
+		}
+
+		fmt.Println("\nInformation disclosure:")
+		if len(out.Disclose) == 0 {
+			fmt.Println("  none of the common version-disclosing headers are set")
+		} else {
+			for _, name := range []string{"Server", "X-Powered-By", "X-AspNet-Version", "X-AspNetMvc-Version", "Via"} {
+				if v, ok := out.Disclose[name]; ok {
+					fmt.Printf("  [!] %-28s %s\n", name+":", v)
+				}
+			}
+		}
+	})
+}
+
+// headerReport is the JSON shape of the httpheaders command.
+type headerReport struct {
+	URL      string            `json:"url"`
+	Status   int               `json:"status"`
+	Present  map[string]string `json:"present"`
+	Missing  []string          `json:"missing"`
+	Disclose map[string]string `json:"disclosure"`
 }

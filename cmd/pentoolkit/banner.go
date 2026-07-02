@@ -21,6 +21,7 @@ func runBanner(ctx context.Context, args []string) error {
 	timeout := fs.Duration("timeout", 5*time.Second, "connection and read timeout")
 	probe := fs.String("probe", "", "optional string to send before reading (\\r\\n and \\n are expanded)")
 	maxBytes := fs.Int("max-bytes", 2048, "maximum bytes to read from the banner")
+	jsonOut := fs.Bool("json", false, "emit results as JSON")
 	fs.Usage = func() {
 		fmt.Fprintf(fs.Output(), "Usage: pentoolkit banner -host HOST -port PORT [flags]\n\n")
 		fmt.Fprintf(fs.Output(), "Grab a service banner. Examples:\n")
@@ -62,11 +63,19 @@ func runBanner(ctx context.Context, args []string) error {
 		return fmt.Errorf("read banner: %w", err)
 	}
 
-	fmt.Printf("Banner from %s (%d bytes):\n", addr, n)
-	fmt.Println(strings.Repeat("-", 40))
-	fmt.Println(printable(buf[:n]))
-	fmt.Println(strings.Repeat("-", 40))
-	return nil
+	text := printable(buf[:n])
+	out := struct {
+		Address string `json:"address"`
+		Bytes   int    `json:"bytes"`
+		Banner  string `json:"banner"`
+	}{Address: addr, Bytes: n, Banner: text}
+
+	return emit(*jsonOut, out, func() {
+		fmt.Printf("Banner from %s (%d bytes):\n", addr, n)
+		fmt.Println(strings.Repeat("-", 40))
+		fmt.Println(text)
+		fmt.Println(strings.Repeat("-", 40))
+	})
 }
 
 // printable renders bytes for terminal display, replacing non-printable

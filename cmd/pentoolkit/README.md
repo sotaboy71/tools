@@ -28,8 +28,12 @@ go install golang.org/x/tools/cmd/pentoolkit@latest
 | `httpheaders` | Fetch a URL and report on security-relevant HTTP headers       |
 | `dns`         | Resolve A/AAAA/MX/NS/TXT/CNAME records for a domain             |
 | `tlsinfo`     | Inspect the TLS version, cipher, and certificate chain of a host |
+| `subenum`     | Discover live subdomains of a domain via DNS resolution        |
+| `httpprobe`   | Probe a URL for common/interesting paths (content discovery)   |
 
-Run `pentoolkit <command> -h` for the flags of any command.
+Run `pentoolkit <command> -h` for the flags of any command. Every command
+accepts `-json` to emit machine-readable output for piping into other tools
+(e.g. `jq`).
 
 ## Examples
 
@@ -54,13 +58,28 @@ pentoolkit dns -domain example.com
 
 # Inspect a TLS certificate (works on expired/self-signed certs too)
 pentoolkit tlsinfo -host example.com -port 443
+
+# Enumerate subdomains (built-in wordlist, or supply your own)
+pentoolkit subenum -domain example.com
+pentoolkit subenum -domain example.com -wordlist subdomains.txt
+
+# Content discovery: probe common paths and show non-404 responses
+pentoolkit httpprobe -url https://example.com
+pentoolkit httpprobe -url https://example.com -wordlist paths.txt -all
+
+# Any command can emit JSON for scripting
+pentoolkit dns -domain example.com -json | jq '.a'
 ```
 
 ## Notes
 
 - `portscan` performs a full TCP handshake ("connect scan"), which is easy for
   the target to log. It is intentionally not stealthy.
-- `httpheaders` honors standard `HTTP(S)_PROXY` / `NO_PROXY` environment
-  variables.
+- `httpheaders` and `httpprobe` honor standard `HTTP(S)_PROXY` / `NO_PROXY`
+  environment variables.
 - `tlsinfo` deliberately skips certificate verification so that misconfigured,
   expired, or self-signed certificates can still be inspected.
+- `subenum` performs active DNS enumeration (it sends real DNS queries for each
+  candidate label). It is non-destructive but not silent.
+- `httpprobe` sends plain `GET`/`HEAD` requests and hides `404`s by default;
+  pass `-all` to see every result.

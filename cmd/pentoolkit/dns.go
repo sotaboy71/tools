@@ -15,6 +15,7 @@ import (
 func runDNS(ctx context.Context, args []string) error {
 	fs := flag.NewFlagSet("dns", flag.ContinueOnError)
 	domain := fs.String("domain", "", "domain to resolve, e.g. example.com - required")
+	jsonOut := fs.Bool("json", false, "emit results as JSON")
 	fs.Usage = func() {
 		fmt.Fprintf(fs.Output(), "Usage: pentoolkit dns -domain DOMAIN\n\n")
 		fmt.Fprintf(fs.Output(), "Resolve A/AAAA/MX/NS/TXT/CNAME records. Example:\n  pentoolkit dns -domain example.com\n\nFlags:\n")
@@ -31,57 +32,72 @@ func runDNS(ctx context.Context, args []string) error {
 	d := strings.TrimSuffix(strings.TrimSpace(*domain), ".")
 	r := net.DefaultResolver
 
-	fmt.Printf("DNS records for %s\n\n", d)
+	var rec dnsRecords
+	rec.Domain = d
 
 	// A / AAAA
-	if ips, err := r.LookupIPAddr(ctx, d); err != nil {
-		fmt.Printf("A/AAAA: lookup failed: %v\n", err)
-	} else {
-		var v4, v6 []string
+	if ips, err := r.LookupIPAddr(ctx, d); err == nil {
 		for _, ip := range ips {
 			if ip.IP.To4() != nil {
-				v4 = append(v4, ip.IP.String())
+				rec.A = append(rec.A, ip.IP.String())
 			} else {
-				v6 = append(v6, ip.IP.String())
+				rec.AAAA = append(rec.AAAA, ip.IP.String())
 			}
 		}
-		sort.Strings(v4)
-		sort.Strings(v6)
-		printList("A", v4)
-		printList("AAAA", v6)
+		sort.Strings(rec.A)
+		sort.Strings(rec.AAAA)
 	}
 
 	// CNAME
-	if cname, err := r.LookupCNAME(ctx, d); err == nil && cname != "" && strings.TrimSuffix(cname, ".") != d {
-		printList("CNAME", []string{strings.TrimSuffix(cname, ".")})
+	if cname, err := r.LookupCNAME(ctx, d); err == nil {
+		if c := strings.TrimSuffix(cname, "."); c != "" && c != d {
+			rec.CNAME = c
+		}
 	}
 
 	// MX
-	if mxs, err := r.LookupMX(ctx, d); err == nil && len(mxs) > 0 {
-		var out []string
+	if mxs, err := r.LookupMX(ctx, d); err == nil {
 		for _, mx := range mxs {
-			out = append(out, fmt.Sprintf("%d %s", mx.Pref, strings.TrimSuffix(mx.Host, ".")))
+			rec.MX = append(rec.MX, fmt.Sprintf("%d %s", mx.Pref, strings.TrimSuffix(mx.Host, ".")))
 		}
-		sort.Strings(out)
-		printList("MX", out)
+		sort.Strings(rec.MX)
 	}
 
 	// NS
-	if nss, err := r.LookupNS(ctx, d); err == nil && len(nss) > 0 {
-		var out []string
+	if nss, err := r.LookupNS(ctx, d); err == nil {
 		for _, ns := range nss {
-			out = append(out, strings.TrimSuffix(ns.Host, "."))
+			rec.NS = append(rec.NS, strings.TrimSuffix(ns.Host, "."))
 		}
-		sort.Strings(out)
-		printList("NS", out)
+		sort.Strings(rec.NS)
 	}
 
 	// TXT
-	if txts, err := r.LookupTXT(ctx, d); err == nil && len(txts) > 0 {
-		printList("TXT", txts)
+	if txts, err := r.LookupTXT(ctx, d); err == nil {
+		rec.TXT = txts
 	}
 
-	return nil
+	return emit(*jsonOut, rec, func() {
+		fmt.Printf("DNS records for %s\n\n", d)
+		printList("A", rec.A)
+		printList("AAAA", rec.AAAA)
+		if rec.CNAME != "" {
+			printList("CNAME", []string{rec.CNAME})
+		}
+		printList("MX", rec.MX)
+		printList("NS", rec.NS)
+		printList("TXT", rec.TXT)
+	})
+}
+
+// dnsRecords is the JSON shape of the dns command.
+type dnsRecords struct {
+	Domain string   `json:"domain"`
+	A      []string `json:"a,omitempty"`
+	AAAA   []string `json:"aaaa,omitempty"`
+	CNAME  string   `json:"cname,omitempty"`
+	MX     []string `json:"mx,omitempty"`
+	NS     []string `json:"ns,omitempty"`
+	TXT    []string `json:"txt,omitempty"`
 }
 
 func printList(label string, values []string) {

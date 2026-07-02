@@ -36,6 +36,7 @@ func runTLSInfo(ctx context.Context, args []string) error {
 	port := fs.Int("port", 443, "target TLS port")
 	timeout := fs.Duration("timeout", 10*time.Second, "connection timeout")
 	server := fs.String("servername", "", "SNI server name (defaults to -host)")
+	jsonOut := fs.Bool("json", false, "emit results as JSON")
 	fs.Usage = func() {
 		fmt.Fprintf(fs.Output(), "Usage: pentoolkit tlsinfo -host HOST [-port 443] [flags]\n\n")
 		fmt.Fprintf(fs.Output(), "Inspect a TLS certificate chain. Example:\n  pentoolkit tlsinfo -host example.com\n\nFlags:\n")
@@ -73,36 +74,84 @@ func runTLSInfo(ctx context.Context, args []string) error {
 	}
 
 	state := conn.ConnectionState()
-	fmt.Printf("TLS connection to %s (SNI %q)\n\n", addr, sni)
-	fmt.Printf("Version:      %s\n", tlsVersionName(state.Version))
-	fmt.Printf("Cipher suite: %s\n", tls.CipherSuiteName(state.CipherSuite))
-	if state.NegotiatedProtocol != "" {
-		fmt.Printf("ALPN:         %s\n", state.NegotiatedProtocol)
-	}
-	if state.Version < tls.VersionTLS12 {
-		fmt.Printf("  [!] negotiated protocol is older than TLS 1.2\n")
-	}
-
 	now := time.Now()
-	fmt.Printf("\nCertificate chain (%d):\n", len(state.PeerCertificates))
-	for i, cert := range state.PeerCertificates {
-		fmt.Printf("\n[%d] Subject: %s\n", i, cert.Subject)
-		fmt.Printf("    Issuer:  %s\n", cert.Issuer)
-		fmt.Printf("    Valid:   %s -> %s\n",
-			cert.NotBefore.UTC().Format(time.RFC3339),
-			cert.NotAfter.UTC().Format(time.RFC3339))
+
+	out := tlsReport{
+		Address:     addr,
+		SNI:         sni,
+		Version:     tlsVersionName(state.Version),
+		CipherSuite: tls.CipherSuiteName(state.CipherSuite),
+		ALPN:        state.NegotiatedProtocol,
+		Weak:        state.Version < tls.VersionTLS12,
+	}
+	for _, cert := range state.PeerCertificates {
+		ci := certInfo{
+			Subject:   cert.Subject.String(),
+			Issuer:    cert.Issuer.String(),
+			NotBefore: cert.NotBefore.UTC().Format(time.RFC3339),
+			NotAfter:  cert.NotAfter.UTC().Format(time.RFC3339),
+			SANs:      cert.DNSNames,
+		}
 		switch {
 		case now.Before(cert.NotBefore):
-			fmt.Printf("    [!] not yet valid\n")
+			ci.Status = "not_yet_valid"
 		case now.After(cert.NotAfter):
-			fmt.Printf("    [!] EXPIRED\n")
+			ci.Status = "expired"
 		default:
-			days := int(cert.NotAfter.Sub(now).Hours() / 24)
-			fmt.Printf("    Expires in %d day(s)\n", days)
+			ci.Status = "valid"
+			ci.ExpiresInDays = int(cert.NotAfter.Sub(now).Hours() / 24)
 		}
-		if len(cert.DNSNames) > 0 {
-			fmt.Printf("    SANs:    %s\n", strings.Join(cert.DNSNames, ", "))
-		}
+		out.Chain = append(out.Chain, ci)
 	}
-	return nil
+
+	return emit(*jsonOut, out, func() {
+		fmt.Printf("TLS connection to %s (SNI %q)\n\n", addr, sni)
+		fmt.Printf("Version:      %s\n", out.Version)
+		fmt.Printf("Cipher suite: %s\n", out.CipherSuite)
+		if out.ALPN != "" {
+			fmt.Printf("ALPN:         %s\n", out.ALPN)
+		}
+		if out.Weak {
+			fmt.Printf("  [!] negotiated protocol is older than TLS 1.2\n")
+		}
+		fmt.Printf("\nCertificate chain (%d):\n", len(out.Chain))
+		for i, ci := range out.Chain {
+			fmt.Printf("\n[%d] Subject: %s\n", i, ci.Subject)
+			fmt.Printf("    Issuer:  %s\n", ci.Issuer)
+			fmt.Printf("    Valid:   %s -> %s\n", ci.NotBefore, ci.NotAfter)
+			switch ci.Status {
+			case "not_yet_valid":
+				fmt.Printf("    [!] not yet valid\n")
+			case "expired":
+				fmt.Printf("    [!] EXPIRED\n")
+			default:
+				fmt.Printf("    Expires in %d day(s)\n", ci.ExpiresInDays)
+			}
+			if len(ci.SANs) > 0 {
+				fmt.Printf("    SANs:    %s\n", strings.Join(ci.SANs, ", "))
+			}
+		}
+	})
+}
+
+// tlsReport is the JSON shape of the tlsinfo command.
+type tlsReport struct {
+	Address     string     `json:"address"`
+	SNI         string     `json:"sni"`
+	Version     string     `json:"version"`
+	CipherSuite string     `json:"cipher_suite"`
+	ALPN        string     `json:"alpn,omitempty"`
+	Weak        bool       `json:"weak_protocol"`
+	Chain       []certInfo `json:"certificate_chain"`
+}
+
+// certInfo describes a single certificate in the chain.
+type certInfo struct {
+	Subject       string   `json:"subject"`
+	Issuer        string   `json:"issuer"`
+	NotBefore     string   `json:"not_before"`
+	NotAfter      string   `json:"not_after"`
+	Status        string   `json:"status"`
+	ExpiresInDays int      `json:"expires_in_days,omitempty"`
+	SANs          []string `json:"sans,omitempty"`
 }
