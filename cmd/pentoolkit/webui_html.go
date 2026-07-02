@@ -64,6 +64,7 @@ const indexHTML = `<!DOCTYPE html>
 <div class="warn">⚠️ Only run these against systems you own or have written permission to test.</div>
 <div class="tabs">
   <div class="tab active" id="tab-tools" onclick="showTab('tools')">Tools</div>
+  <div class="tab" id="tab-threats" onclick="showTab('threats')">Threats</div>
   <div class="tab" id="tab-help" onclick="showTab('help')">Help</div>
 </div>
 
@@ -83,6 +84,15 @@ const indexHTML = `<!DOCTYPE html>
     <div class="card">
       <div class="status" id="status">Ready.</div>
       <pre id="output">Output will appear here.</pre>
+    </div>
+  </section>
+
+  <section id="view-threats" class="hidden">
+    <div class="card">
+      <h2>Threat reference (defender view)</h2>
+      <p class="desc">The 12 most common attack types — what each is, how to
+      <b>detect</b> it, and how to <b>defend</b> against it. Tap one to expand.</p>
+      <div id="threats"></div>
     </div>
   </section>
 
@@ -140,11 +150,39 @@ const TOOLS = {
 };
 
 function showTab(name) {
-  document.getElementById('view-tools').classList.toggle('hidden', name!=='tools');
-  document.getElementById('view-help').classList.toggle('hidden', name!=='help');
-  document.getElementById('tab-tools').classList.toggle('active', name==='tools');
-  document.getElementById('tab-help').classList.toggle('active', name==='help');
+  ['tools','threats','help'].forEach(function(t){
+    document.getElementById('view-'+t).classList.toggle('hidden', name!==t);
+    document.getElementById('tab-'+t).classList.toggle('active', name===t);
+  });
+  if (name==='threats') loadThreats();
 }
+
+let threatsLoaded = false;
+function loadThreats() {
+  if (threatsLoaded) return;
+  threatsLoaded = true;
+  const box = document.getElementById('threats');
+  fetch('/api/attacks').then(function(r){ return r.json(); }).then(function(list){
+    box.innerHTML = '';
+    list.forEach(function(a){
+      const d = document.createElement('details');
+      d.style.cssText = 'border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin:8px 0;background:var(--panel2);';
+      const s = document.createElement('summary');
+      s.style.cssText = 'cursor:pointer;font-weight:600;';
+      s.textContent = a.name;
+      d.appendChild(s);
+      const body = document.createElement('div');
+      body.className = 'desc';
+      body.innerHTML = '<p>'+esc(a.summary)+'</p>'
+        + '<b>Detect</b><ul>' + a.detect.map(function(x){return '<li>'+esc(x)+'</li>';}).join('') + '</ul>'
+        + '<b>Defend</b><ul>' + a.defend.map(function(x){return '<li>'+esc(x)+'</li>';}).join('') + '</ul>';
+      d.appendChild(body);
+      box.appendChild(d);
+    });
+  }).catch(function(e){ box.textContent = 'Failed to load: '+e; threatsLoaded=false; });
+}
+
+function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 
 function initTools() {
   const sel = document.getElementById('tool');

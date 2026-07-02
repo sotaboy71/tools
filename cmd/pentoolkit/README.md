@@ -69,6 +69,7 @@ full-screen app, there's also a WebView wrapper in
 | `subenum`     | Discover live subdomains of a domain via DNS resolution        |
 | `httpprobe`   | Probe a URL for common/interesting paths (content discovery)   |
 | `guide`       | Print a step-by-step walkthrough of a recon workflow           |
+| `attacks`     | Defender reference: detect & defend the 12 common attack types |
 | `serve`       | Launch the mobile-friendly web UI for all tools                |
 
 Run `pentoolkit <command> -h` for the flags of any command. Every command
@@ -109,7 +110,21 @@ pentoolkit httpprobe -url https://example.com -wordlist paths.txt -all
 
 # Any command can emit JSON for scripting
 pentoolkit dns -domain example.com -json | jq '.a'
+
+# Learn to detect and defend the 12 most common attack types
+pentoolkit attacks                 # list them
+pentoolkit attacks -name phishing  # detail: what it is, detect, defend
 ```
+
+## Threat reference (defender view)
+
+`pentoolkit attacks` is a built-in, read-only reference covering the 12 most
+common attack types (phishing, malware, ransomware, DoS/DDoS, MitM, credential
+attacks, social engineering, SQLi, zero-day, insider, supply chain, spoofing).
+For each one it explains what it is, **how to detect it**, and **how to defend
+against it**. It is educational/blue-team material — the toolkit does not
+perform any of these attacks. The same content appears in the web UI's
+**Threats** tab.
 
 ## Notes
 

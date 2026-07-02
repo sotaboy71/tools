@@ -40,6 +40,7 @@ var commands = []command{
 	{"subenum", "Discover live subdomains of a domain via DNS", runSubenum},
 	{"httpprobe", "Probe common paths on a URL for content discovery", runHTTPProbe},
 	{"guide", "Print a step-by-step walkthrough of a recon workflow", runGuide},
+	{"attacks", "Defender reference: detect & defend the 12 common attacks", runAttacks},
 	{"serve", "Launch the mobile-friendly web UI for all tools", runServe},
 }
 

@@ -55,6 +55,10 @@ func runServe(ctx context.Context, args []string) error {
 	mux.HandleFunc("/api/run", func(w http.ResponseWriter, r *http.Request) {
 		handleRun(w, r, self)
 	})
+	mux.HandleFunc("/api/attacks", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		writeJSON(w, attackCatalog)
+	})
 
 	srv := &http.Server{Addr: *addr, Handler: mux}
 
