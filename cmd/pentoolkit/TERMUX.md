@@ -11,6 +11,26 @@ right on the device.
 
 ---
 
+## TL;DR — paste this into Termux
+
+Once Termux is installed (step 1 below), this grabs the source we built and gets
+it running in one go:
+
+```sh
+pkg update && pkg upgrade -y
+pkg install -y golang git
+git clone https://github.com/sotaboy71/tools.git
+cd tools
+git checkout claude/pen-testing-toolkit-lay32c
+go build -o pentoolkit ./cmd/pentoolkit
+./pentoolkit I need help          # confirms it works + shows the walkthrough
+```
+
+Then jump to [step 5](#5a-run-the-web-app-easiest) to open the app. The sections
+below explain each line.
+
+---
+
 ## 1. Install Termux (from F-Droid, not the Play Store)
 
 The Google Play version of Termux is outdated and broken. Install from
@@ -34,15 +54,20 @@ Verify Go is installed:
 go version
 ```
 
-## 3. Get the code
+## 3. Get the code (the source we made)
 
-Clone the repository that contains `cmd/pentoolkit` (use your own fork's URL):
+Clone your repository and switch to the branch that has pentoolkit on it:
 
 ```sh
 git clone https://github.com/sotaboy71/tools.git
 cd tools
 git checkout claude/pen-testing-toolkit-lay32c
 ```
+
+`git clone` downloads a full copy of the project into a new `tools` folder;
+`cd tools` moves into it; `git checkout` switches to the branch where we added
+`cmd/pentoolkit`. (If the code later gets merged into the main branch, you can
+skip the `git checkout` line.)
 
 ## 4. Build the binary
 
@@ -82,7 +107,48 @@ for the built-in instructions.
 ./pentoolkit dns -domain example.com
 ./pentoolkit portscan -host example.com -ports 1-1024
 ./pentoolkit tlsinfo -host example.com -port 443
+./pentoolkit attacks              # the 12 attack types: detect & defend
+./pentoolkit toolbox              # directory of the big-name tools
 ```
+
+## Put it to work — a safe first win (all on your phone)
+
+Prove the whole loop works against a target that's 100% yours — the phone
+itself. In one Termux session start a tiny local website:
+
+```sh
+python3 -m http.server 8000       # (pkg install -y python  if needed)
+```
+
+Open a **second** Termux session (swipe from the left edge → New session) and
+scan it:
+
+```sh
+cd tools
+./pentoolkit portscan -host 127.0.0.1 -ports 8000-8005
+./pentoolkit banner -host 127.0.0.1 -port 8000 -probe "HEAD / HTTP/1.0\r\n\r\n"
+```
+
+You just scanned a machine and identified the service running on it — the core
+of the whole toolkit — without touching anyone else's system.
+
+## Optional: install the bigger tools in Termux
+
+`toolbox -check` will tell you which well-known tools you have and give you the
+Termux install command for the rest:
+
+```sh
+./pentoolkit toolbox -check -os pkg
+```
+
+Many (e.g. `nmap`, `hydra`, `nikto`) install straight from Termux:
+
+```sh
+pkg install -y nmap
+```
+
+Not every desktop tool exists for Android/Termux, but `-check` shows you what's
+available and hands you the commands.
 
 ## Optional: run pentoolkit from anywhere
 
