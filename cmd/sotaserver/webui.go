@@ -59,6 +59,18 @@ func runServe(ctx context.Context, args []string) error {
 		w.Header().Set("Content-Type", "application/json")
 		writeJSON(w, attackCatalog)
 	})
+	mux.HandleFunc("/api/toolbox", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		writeJSON(w, toolboxCatalog)
+	})
+	mux.HandleFunc("/api/toolbox-check", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		mgr := detectPkgMgr()
+		writeJSON(w, map[string]interface{}{
+			"manager": mgr,
+			"results": toolboxCheckResults(toolboxCatalog, mgr),
+		})
+	})
 
 	srv := &http.Server{Addr: *addr, Handler: mux}
 

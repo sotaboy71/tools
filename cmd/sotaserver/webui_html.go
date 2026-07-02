@@ -65,6 +65,7 @@ const indexHTML = `<!DOCTYPE html>
 <div class="tabs">
   <div class="tab active" id="tab-tools" onclick="showTab('tools')">Tools</div>
   <div class="tab" id="tab-threats" onclick="showTab('threats')">Threats</div>
+  <div class="tab" id="tab-toolbox" onclick="showTab('toolbox')">Toolbox</div>
   <div class="tab" id="tab-help" onclick="showTab('help')">Help</div>
 </div>
 
@@ -93,6 +94,18 @@ const indexHTML = `<!DOCTYPE html>
       <p class="desc">The 12 most common attack types — what each is, how to
       <b>detect</b> it, and how to <b>defend</b> against it. Tap one to expand.</p>
       <div id="threats"></div>
+    </div>
+  </section>
+
+  <section id="view-toolbox" class="hidden">
+    <div class="card">
+      <h2>The bigger toolkit</h2>
+      <p class="desc">Well-known tools you'll graduate to (Nmap, Metasploit,
+      Wireshark, …). This app doesn't include them — tap a name to open its
+      official site. Use the button to see which you already have here.</p>
+      <button id="checkBtn" onclick="checkToolbox()">Check what's installed here</button>
+      <div id="toolbox-check" class="desc"></div>
+      <div id="toolbox"></div>
     </div>
   </section>
 
@@ -150,11 +163,56 @@ const TOOLS = {
 };
 
 function showTab(name) {
-  ['tools','threats','help'].forEach(function(t){
+  ['tools','threats','toolbox','help'].forEach(function(t){
     document.getElementById('view-'+t).classList.toggle('hidden', name!==t);
     document.getElementById('tab-'+t).classList.toggle('active', name===t);
   });
   if (name==='threats') loadThreats();
+  if (name==='toolbox') loadToolbox();
+}
+
+let toolboxLoaded = false;
+function loadToolbox() {
+  if (toolboxLoaded) return;
+  toolboxLoaded = true;
+  const box = document.getElementById('toolbox');
+  fetch('/api/toolbox').then(function(r){ return r.json(); }).then(function(cats){
+    box.innerHTML = '';
+    cats.forEach(function(c){
+      const h = document.createElement('h3');
+      h.textContent = c.category;
+      box.appendChild(h);
+      c.tools.forEach(function(t){
+        const row = document.createElement('div');
+        row.style.cssText = 'margin:6px 0;';
+        const link = '<a href="'+esc(t.url)+'" target="_blank" rel="noopener">'+esc(t.name)+'</a>';
+        const maps = t.maps_to ? ' <span style="color:var(--muted)">(like '+esc(t.maps_to)+')</span>' : '';
+        row.innerHTML = link + maps + '<br><span class="desc">'+esc(t.what)+'</span>';
+        box.appendChild(row);
+      });
+    });
+  }).catch(function(e){ box.textContent = 'Failed to load: '+e; toolboxLoaded=false; });
+}
+
+function checkToolbox() {
+  const btn = document.getElementById('checkBtn');
+  const out = document.getElementById('toolbox-check');
+  btn.disabled = true; out.textContent = 'Checking...';
+  fetch('/api/toolbox-check').then(function(r){ return r.json(); }).then(function(data){
+    const res = data.results || [];
+    const have = res.filter(function(r){ return r.installed; });
+    const miss = res.filter(function(r){ return !r.installed; });
+    let html = '<p><b>Installed here ('+have.length+'/'+res.length+')'
+      + (data.manager ? ', package manager: '+esc(data.manager) : '') + ':</b></p><ul>';
+    html += have.map(function(r){ return '<li>[+] '+esc(r.name)+' — <code>'+esc(r.path)+'</code></li>'; }).join('') || '<li>(none yet)</li>';
+    html += '</ul><p><b>Not installed — install with:</b></p><ul>';
+    html += miss.map(function(r){
+      return '<li>[-] '+esc(r.name)+' — <code>'+esc(r.install || r.url)+'</code></li>';
+    }).join('');
+    html += '</ul>';
+    out.innerHTML = html;
+  }).catch(function(e){ out.textContent = 'Check failed: '+e; })
+    .finally(function(){ btn.disabled = false; });
 }
 
 let threatsLoaded = false;

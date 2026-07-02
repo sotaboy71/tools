@@ -187,26 +187,37 @@ func installHint(mgr, pkg string) string {
 	return ""
 }
 
-// runToolboxCheck looks up each tool's command on PATH and reports the results,
-// including a per-OS install hint for the ones that are missing.
-func runToolboxCheck(cats []toolCategory, mgr string, jsonOut bool) error {
+// toolboxCheckResults looks up each tool's command on PATH and returns the
+// results (installed path or a per-OS install hint). Shared by the CLI and the
+// web UI.
+func toolboxCheckResults(cats []toolCategory, mgr string) []checkResult {
 	var results []checkResult
-	var installed, total int
 	for _, c := range cats {
 		for _, t := range c.Tools {
 			if t.Bin == "" {
 				continue // GUI/OS/platform, not a CLI we can detect
 			}
-			total++
 			r := checkResult{Name: t.Name, Bin: t.Bin, URL: t.URL}
 			if path, err := exec.LookPath(t.Bin); err == nil {
 				r.Installed = true
 				r.Path = path
-				installed++
 			} else {
 				r.Install = installHint(mgr, t.Pkg)
 			}
 			results = append(results, r)
+		}
+	}
+	return results
+}
+
+// runToolboxCheck looks up each tool's command on PATH and reports the results,
+// including a per-OS install hint for the ones that are missing.
+func runToolboxCheck(cats []toolCategory, mgr string, jsonOut bool) error {
+	results := toolboxCheckResults(cats, mgr)
+	installed, total := 0, len(results)
+	for _, r := range results {
+		if r.Installed {
+			installed++
 		}
 	}
 
