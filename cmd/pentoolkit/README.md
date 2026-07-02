@@ -28,15 +28,19 @@ works, and to practice on legal training sites like HackTheBox.
 - **attacks** — a study guide: the 12 common attack types and how to spot/stop them.
 - **guide** / **serve** — a walkthrough, and the point-and-click app version.
 
-## What you need to run it (requirements)
+## What you need to run it (requirements) — and why
 
 **To build and run pentoolkit itself, you need exactly two things:**
 
-1. **Go** — version 1.11 or newer. This is the compiler that turns the source
-   into the runnable program. Download: <https://go.dev/dl/>
-2. **A terminal** — already built into every computer (Terminal on macOS,
-   PowerShell/Command Prompt on Windows, any terminal on Linux, Termux on
-   Android).
+1. **Go** (version 1.11 or newer) — **because** pentoolkit is written in the Go
+   programming language, and its source code is just human-readable text until
+   something turns it into a program your computer can actually run. Go's build
+   command does that. Without Go there's nothing to turn the code into a
+   runnable app (unless someone hands you an already-built copy). Download:
+   <https://go.dev/dl/>
+2. **A terminal** — **because** pentoolkit is a command-line program: you start
+   it and read its results by typing commands, so you need the text window that
+   lets you do that. Every computer already has one.
 
 That's the whole list. pentoolkit uses **only Go's standard library**, so there
 is nothing else to install — no `pip`, no `npm`, no extra packages.
@@ -59,14 +63,23 @@ go build -o pentoolkit ./cmd/pentoolkit
 **Runs on:** Linux, macOS, Windows, and Android (via Termux) — it's a single
 self-contained binary.
 
+### "Do I need Python?" — No.
+
+pentoolkit does **not** need Python at all. Python only ever comes up for one
+optional thing: the learning tutorial uses a single Python command
+(`python3 -m http.server 8000`) as a quick way to start a tiny test website on
+your own computer so you have something safe to practice scanning. Skip that
+exercise and you never touch Python. (You'll still meet Python eventually
+because *many other* security tools are written in it — but pentoolkit isn't.)
+
 ### Optional extras (only for the practice/learning parts — NOT needed to run pentoolkit)
 
-| Tool | What it's for | Install |
-|------|---------------|---------|
-| **git** | Download this source code (or just grab a ZIP instead) | `apt/brew/pkg install git` |
-| **Docker** | Run local practice websites (Juice Shop, DVWA) to test against | <https://docs.docker.com/get-docker/> |
-| **Python 3** | The `python3 -m http.server` trick to spin up a quick test site | Usually preinstalled; else `apt/brew/pkg install python3` |
-| **jq** | Prettify/filter the `-json` output | `apt/brew/pkg install jq` |
+| Tool | Why you'd use it (the "because") | Install |
+|------|----------------------------------|---------|
+| **git** | **Because** it copies this project's code from the internet onto your machine in one command. Alternative: just download a ZIP. | `apt/brew/pkg install git` |
+| **Docker** | **Because** the safe practice sites (Juice Shop, DVWA) are big apps with many parts — Docker runs them pre-packaged in one command instead of you installing every piece. | <https://docs.docker.com/get-docker/> |
+| **Python 3** | **Because** the tutorial's `python3 -m http.server` trick instantly creates a small test website to scan. Only needed for that exercise. | Usually preinstalled; else `apt/brew/pkg install python3` |
+| **jq** | **Because** pentoolkit's `-json` output is compact; jq reformats it to be readable and lets you pull out specific fields. | `apt/brew/pkg install jq` |
 
 ## Quick start (easiest path)
 
