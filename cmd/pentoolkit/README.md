@@ -227,11 +227,19 @@ pentoolkit toolbox -json           # as data
 ```
 
 `pentoolkit toolbox -check` looks on your system's `PATH` and reports which of
-these tools you already have (with the path) and which are missing (with the
-link to install). That's how pentoolkit "knows about" the bigger toolkit —
-it can't contain Kali's hundreds of programs (that's a whole operating system,
-not one binary), but it can tell you what's installed and point you at the
-rest.
+these tools you already have (with the path) and which are missing — and for the
+missing ones it prints the **exact install command for your system** (it
+auto-detects `apt`/`dnf`/`pacman`/`brew`/`pkg`/`winget`). Use `-os NAME` to show
+hints for a different system, e.g.:
+
+```sh
+pentoolkit toolbox -check              # hints for the OS you're on now
+pentoolkit toolbox -check -os brew     # show macOS (Homebrew) commands
+```
+
+That's how pentoolkit "knows about" the bigger toolkit — it can't contain Kali's
+hundreds of programs (that's a whole operating system, not one binary), but it
+can tell you what's installed and hand you the command to get the rest.
 
 It covers the big names you've probably heard of — **Nmap** (scanning),
 **Metasploit** (exploitation), **Burp Suite** / **OWASP ZAP** (web),
